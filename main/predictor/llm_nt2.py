@@ -63,7 +63,7 @@ class Predictor():
             self.model, resume_path, config=peft_config)
         self.candidates = {}                      # 键标签和值token 
         self.label_token_len = label_token_len    # 标签对应的Token长度（每个标签都一致）
-        self.data_present_path="./data/youku/present.json"
+        self.data_present_path="./data/taobao/present.json"
         self.data_path = data_path
         self.data_present = self.get_data_present(self.data_present_path)
         self.model_to_device(gpu=num_gpus)
@@ -335,7 +335,7 @@ class Predictor():
             print(report)
 
             # 指定目标目录
-            out_dir = "./data_record/predict_youku_1000_dpo_beta0.2"
+            out_dir = "./data_record/predict_taobao_250_dpo_chbd_chfn_1:0.5_tj_new1_11250_nt2"
             # 递归创建目录，若已存在则不报错
             os.makedirs(out_dir, exist_ok=True)
 

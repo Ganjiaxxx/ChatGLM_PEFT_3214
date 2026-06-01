@@ -335,7 +335,7 @@ class Predictor():
             print(report)
 
             # 指定目标目录
-            out_dir = "./data_record/predict_llama_mitmovies_500_dpo5_24250"
+            out_dir = "./data_record/predict_mitmovies_1000_nt2_3_604"
             # 递归创建目录，若已存在则不报错
             os.makedirs(out_dir, exist_ok=True)
 

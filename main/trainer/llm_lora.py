@@ -97,11 +97,11 @@ class Trainer():
         self.train_loader, self.eval_loader = d(
             self.batch_size, self.batch_size_eval, self.eval_mode, True)
 
-    def __call__(self, resume_step=None, num_epochs=30, lr=1e-4, eval_call_epoch=None):
+    def __call__(self, resume_step=None, num_epochs=30, lr=1e-4, eval_call_epoch=None, eval_call_step=None):
         return self.train(resume_step=resume_step,
-                          num_epochs=num_epochs, lr=lr, eval_call_epoch=eval_call_epoch)
+                          num_epochs=num_epochs, lr=lr, eval_call_epoch=eval_call_epoch, eval_call_step=eval_call_step,)
 
-    def train(self, resume_step=None, num_epochs=30, lr=1e-4,  eval_call_epoch=None):
+    def train(self, resume_step=None, num_epochs=30, lr=1e-4,  eval_call_epoch=None, eval_call_step=None):
         # 一些数据集会显存不足，才用以下的代码，例如weibo
         '''accumulation_steps = 2  # 每2小批次累积一次梯度
         num_update_steps_per_epoch = len(self.train_loader) // accumulation_steps
@@ -169,6 +169,10 @@ class Trainer():
                     'Train: {}/{}'.format(epoch + 1, num_epochs))
                 train_iter.set_postfix(
                     train_loss=train_loss / train_count, **{k: v / train_count for k, v in eval_scores.items()})
+                
+                # 按照step保存模型
+                if eval_call_step is not None and eval_call_step(train_step):
+                    self.save_model(train_step)
 
             self.analysis.append_train_record({
                 'epoch': epoch + 1,

@@ -45,9 +45,6 @@ class LLMChatDataset(Dataset):
     
     def build_single_message(self, t):
         ids = self.tokenizer.apply_chat_template([t])
-        gjx = self.tokenizer.decode(ids)
-
-        print(gjx)
         ## 不管什么模型 只要不是assistant就直接-100返回
         if t['role'] in ['user', 'system']:
             ls = [-100 for _ in ids]
@@ -185,7 +182,7 @@ class LLMChatDataset(Dataset):
         input_ids, labels = self.init_ids_and_masks()
 
         for t in conv:
-            #ids, ls = self.build_single_message(t)       # 平常格式用这个
+            #ids, ls = self.build_single_message(t)       # 平常格式以及后续没有推理校正 都用这个
             ids, ls = self.build_single_message_nt2(t)   # next token方法用这个
             input_ids.extend(ids)
             labels.extend(ls)

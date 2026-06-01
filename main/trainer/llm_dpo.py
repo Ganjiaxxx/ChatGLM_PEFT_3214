@@ -243,7 +243,6 @@ class Trainer():
                 self.reference_model.print_trainable_parameters()'''
 
             for idx, it in enumerate(train_iter):
-                
                 # 一个batch的平均
                 dpo_loss, chosen_rewards, rejected_rewards, policy_rewards, reference_rewards, margin = self.compute_batch_loss(
                     chosen=it["chosen"],
@@ -370,7 +369,6 @@ class Trainer():
             self.policy_model.eval()
 
             for it in eval_iter:
-
                 dpo_loss, chosen_rewards, rejected_rewards, policy_rewards, reference_rewards, margin = self.compute_batch_loss(
                     chosen=it["chosen"],
                     rejected=it["rejected"],

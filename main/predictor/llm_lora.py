@@ -8,7 +8,7 @@ import os
 from sklearn.metrics import classification_report, f1_score
 import pandas as pd
 import json_repair
-
+from time import perf_counter
 
 class Predictor():
     true_model: PeftModelForCausalLM
@@ -57,7 +57,7 @@ class Predictor():
         elif self.config.model_type == 'qwen2':
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_from_pretrained, torch_dtype="auto", device_map="auto", trust_remote_code=True)
-        self.data_present_path="./data/ud/present.json"
+        self.data_present_path="/root/ChatGLM_PEFT_new/data/Tweebank_NER/present.json"
         self.data_path = data_path
         self.data_present = self.get_data_present(self.data_present_path)
         self.model = PeftModel.from_pretrained(
@@ -118,7 +118,7 @@ class Predictor():
         result = []
         for ent in ents:
             if isinstance(ent, dict):
-                text = ent.get("pos", "").strip()   # 如果是词性得改成pos
+                text = ent.get("entity", "").strip()   # 如果是词性得改成pos
                 typ  = ent.get("type", "").strip()
                 if text and typ:
                     result.append((text, typ))
@@ -201,6 +201,8 @@ class Predictor():
                     for i in range(len(query)):
                         if len(query[i]) > batch_max_len:
                             batch_max_len = len(query[i])
+
+                start = perf_counter()
                 # 一个batch中的inputs进行补齐得到batched_inputs
                 batched_inputs = self.tokenizer(
                     inputs,
@@ -229,9 +231,13 @@ class Predictor():
             print(f"Recall:    {metrics['recall']:.4f}")
             print(f"F1-score:  {metrics['f1']:.4f}")
             # 指定目标目录
-            out_dir = "./data_record/predict_llama_ud_500_lora_1_25000"
+            out_dir = "/root/ChatGLM_PEFT_new/data_record/predict_llama_TweebankNER_1000_lora1_50000"
             # 递归创建目录，若已存在则不报错
             os.makedirs(out_dir, exist_ok=True)
+
+            end = perf_counter()
+            with open(f"{out_dir}/time.txt", "w", encoding="utf-8") as f:
+                f.write(f"Elapsed (perf_counter): {end - start:.6f} s")
 
             with open(f"{out_dir}/output_lora2.txt", "w", encoding="utf-8") as file:
                 for s in preds:

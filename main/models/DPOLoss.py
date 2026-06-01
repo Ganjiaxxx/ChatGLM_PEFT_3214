@@ -33,6 +33,10 @@ class DPOLoss(nn.Module):
         margin = logits.detach()
 
         loss = -F.logsigmoid(self.beta * logits)
+        '''loss_chosen = -F.logsigmoid(self.beta * (policy_chosen_logps - reference_chosen_logps))
+        loss_rejected = -F.logsigmoid(self.beta * (reference_rejected_logps - policy_rejected_logps))
+        # 给负例一个更小的权重，或者设置一个下限
+        loss = loss_chosen + 0.5 * loss_rejected'''
 
         # 下面两个用于追踪训练的进度
         chosen_rewards = (policy_chosen_logps - reference_chosen_logps).detach()

@@ -41,6 +41,32 @@ class LLMDPODataset(Dataset):
                 return [self.tokenizer.convert_tokens_to_ids('<|begin_of_text|>')], [-100]
         else:
             return [], []
+        
+    def build_single_message(self, t):
+        ids = self.tokenizer.apply_chat_template([t])
+        ## 不管什么模型 只要不是assistant就直接-100返回
+        if t['role'] in ['user', 'system']:
+            ls = [-100 for _ in ids]
+            return ids, ls
+        
+        # assistant的内容
+        # 如果是llama需要mask掉除content以外的内容
+        if self.config.model_type == 'llama':
+            # 由于只需要训练生成的回答，因此要mask掉最后一组对话的身份信息以及无关的符号
+            # Llama 2
+            if "<|begin_of_text|>" not in self.tokenizer.special_tokens_map.values():
+                tokens_to_train = self.tokenizer.encode(t['content']) + [self.tokenizer.convert_tokens_to_ids('</s>')]
+            # Llama 3
+            else:
+                tokens_to_train = self.tokenizer.encode(t['content']) + [self.tokenizer.convert_tokens_to_ids('<|eot_id|>')]
+
+            ls = [-100] * (len(ids) - len(tokens_to_train)) + tokens_to_train
+        
+        # 对于其他模型，不需要对最后一组信息进行局部mask，将最后一组信息全部作为训练对象
+        else:
+            ls = ids
+
+        return ids, ls
 
     def apply_template_with_char_tokenize(self, messages: List[dict], content_role="assistant", add_generation_prompt=False):
         """
@@ -169,6 +195,8 @@ class LLMDPODataset(Dataset):
 
         for t in conv:
             ids, ls = self.build_single_message_dpo(t)
+            # 没有一个一个字符进行编码，没有推理矫正的 用这个
+            #ids, ls = self.build_single_message(t)
             input_ids.extend(ids)
             labels.extend(ls)
 
@@ -190,6 +218,8 @@ class LLMDPODataset(Dataset):
 
         # 构造成模板，送进去函数
         ids1, ls1 = self.build_single_message_dpo(template_chosen)
+        # 没有一个一个字符进行编码，没有推理矫正的 用这个
+        #ids1, ls1 = self.build_single_message(template_chosen)
         '''chosen_full_tokens = [
             self.tokenizer.convert_tokens_to_ids('<|begin_of_text|>')]'''
         chosen_full_tokens.extend(prompt)
@@ -200,6 +230,8 @@ class LLMDPODataset(Dataset):
 
         # 构造成模板，送进去函数
         ids2, ls2 = self.build_single_message_dpo(template_rejected)
+        # 没有一个一个字符进行编码，没有推理矫正的 用这个
+        #ids2, ls2 = self.build_single_message(template_rejected)
         '''rejected_full_tokens = [
             self.tokenizer.convert_tokens_to_ids('<|begin_of_text|>')]'''
         rejected_full_tokens.extend(prompt)
